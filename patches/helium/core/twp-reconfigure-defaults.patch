@@ -1,0 +1,131 @@
+--- a/extensions/common/manifest.h
++++ b/extensions/common/manifest.h
+@@ -109,10 +109,18 @@
+   }
+ 
+   static inline bool IsUBlockComponent(std::string_view extension_id) {
+     return extension_id == helium::kUBlockOriginComponentId;
+   }
+ 
+   static inline bool IsUblockComponentHashed(const HashedExtensionId& id) {
+     return id.value() == helium::kUblockOriginComponentIdHashed;
+   }
+ 
++  static inline bool IsTwpComponent(std::string_view extension_id) {
++    return extension_id == helium::kTwpComponentId;
++  }
++
++  static inline bool IsTwpComponentHashed(const HashedExtensionId& id) {
++    return id.value() == helium::kTwpComponentIdHashed;
++  }
++
+   static inline bool IsValidLocation(mojom::ManifestLocation location) {
+--- a/chrome/browser/chrome_content_browser_client.cc
++++ b/chrome/browser/chrome_content_browser_client.cc
+@@ -6492,3 +6492,4 @@
+   if ((extension->is_extension() || extension->is_platform_app()) &&
+       Manifest::IsComponentLocation(extension->location())
+-      && !Manifest::IsUBlockComponent(extension->id())) {
++      && !Manifest::IsUBlockComponent(extension->id())
++      && !Manifest::IsTwpComponent(extension->id())) {
+--- a/chrome/browser/ui/views/apps/app_info_dialog/app_info_summary_panel.cc
++++ b/chrome/browser/ui/views/apps/app_info_dialog/app_info_summary_panel.cc
+@@ -170,3 +170,4 @@
+   if (Manifest::IsComponentLocation(app_->location())
+-      && !Manifest::IsUBlockComponent(app_->id())) {
++      && !Manifest::IsUBlockComponent(app_->id())
++      && !Manifest::IsTwpComponent(app_->id())) {
+--- a/chrome/common/extensions/chrome_extensions_client.cc
++++ b/chrome/common/extensions/chrome_extensions_client.cc
+@@ -222,3 +222,4 @@
+   if (extensions::Manifest::IsComponentLocation(extension.location())
+       && !extensions::Manifest::IsUBlockComponent(extension.id())
++      && !extensions::Manifest::IsTwpComponent(extension.id())
+       && is_extension_active) {
+--- a/extensions/common/permissions/permissions_data.cc
++++ b/extensions/common/permissions/permissions_data.cc
+@@ -115,3 +115,4 @@
+   if (location == mojom::ManifestLocation::kComponent
+-      && !Manifest::IsUBlockComponent(extension_id))
++      && !Manifest::IsUBlockComponent(extension_id)
++      && !Manifest::IsTwpComponent(extension_id))
+     return true;
+@@ -481,3 +482,4 @@
+-    if ((location_ != mojom::ManifestLocation::kComponent ||
+-          Manifest::IsUBlockComponent(extension_id_)) &&
++    if ((location_ != mojom::ManifestLocation::kComponent ||
++          Manifest::IsUBlockComponent(extension_id_) ||
++          Manifest::IsTwpComponent(extension_id_)) &&
+         IsPolicyBlockedHostUnsafe(origin_url)) {
+@@ -620,3 +622,4 @@
+-  if ((location_ != mojom::ManifestLocation::kComponent ||
+-          Manifest::IsUBlockComponent(extension_id_)) &&
++  if ((location_ != mojom::ManifestLocation::kComponent ||
++          Manifest::IsUBlockComponent(extension_id_) ||
++          Manifest::IsTwpComponent(extension_id_)) &&
+       IsPolicyBlockedHostUnsafe(document_url)) {
+@@ -633,3 +636,4 @@
+     if (base::FeatureList::IsEnabled(
+             extensions_features::kExtensionsMenuAccessControl) &&
+-      context_id_ && (location_ != mojom::ManifestLocation::kComponent ||
+-          Manifest::IsUBlockComponent(extension_id_)) &&
++      context_id_ && (location_ != mojom::ManifestLocation::kComponent ||
++          Manifest::IsUBlockComponent(extension_id_) ||
++          Manifest::IsTwpComponent(extension_id_)) &&
+--- a/chrome/browser/extensions/extension_util.cc
++++ b/chrome/browser/extensions/extension_util.cc
+@@ -182,3 +182,4 @@
+     if (extension->location() == mojom::ManifestLocation::kComponent
+-        && !Manifest::IsUBlockComponent(extension->id())) {
++        && !Manifest::IsUBlockComponent(extension->id())
++        && !Manifest::IsTwpComponent(extension->id())) {
+--- a/chrome/browser/extensions/standard_management_policy_provider.cc
++++ b/chrome/browser/extensions/standard_management_policy_provider.cc
+@@ -128,6 +128,8 @@
+   bool is_u0 = Manifest::IsUBlockComponent(extension->id());
+-
+-  if (source_extension && Manifest::IsUBlockComponent(source_extension->id())) {
+-    return is_u0;
++  bool is_twp = Manifest::IsTwpComponent(extension->id());
++  bool is_ours = is_u0 || is_twp;
++
++  if (source_extension && (Manifest::IsUBlockComponent(source_extension->id()) || Manifest::IsTwpComponent(source_extension->id()))) {
++    return is_ours;
+   } else if (source_extension == nullptr && is_u0) {
+     return true;
+   }
+--- a/extensions/browser/extension_util.cc
++++ b/extensions/browser/extension_util.cc
+@@ -98,3 +98,4 @@
+     if (Manifest::IsComponentLocation(extension->location())
+-        && !Manifest::IsUBlockComponent(extension->id())) {
++        && !Manifest::IsUBlockComponent(extension->id())
++        && !Manifest::IsTwpComponent(extension->id())) {
+       return true;
+     }
+--- a/extensions/browser/extension_prefs.cc
++++ b/extensions/browser/extension_prefs.cc
+@@ -183,3 +183,3 @@
+   if (!value.has_value()
+-      && extension_id == helium::kUBlockOriginComponentId
++      && (extension_id == helium::kUBlockOriginComponentId || extension_id == helium::kTwpComponentId)
+       && pref_key == kPrefIncognitoEnabled) {
+@@ -196,3 +196,3 @@
+       disable_reason::DISABLE_UNSUPPORTED_REQUIREMENT,
+-      Manifest::IsUBlockComponent(component_extension_id)
++      (Manifest::IsUBlockComponent(component_extension_id) || Manifest::IsTwpComponent(component_extension_id))
+         ? disable_reason::DISABLE_USER_ACTION
+@@ -2207,4 +2207,4 @@
+   registry->RegisterDictionaryPref(pref_names::kExtensions);
+   registry->RegisterListPref(pref_names::kPinnedExtensions,
+-                             base::ListValue().Append(helium::kUBlockOriginComponentId),
++                             base::ListValue().Append(helium::kUBlockOriginComponentId).Append(helium::kTwpComponentId),
+                              user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
+--- a/extensions/common/features/simple_feature.cc
++++ b/extensions/common/features/simple_feature.cc
+@@ -706,4 +706,5 @@
+   if (component_extensions_auto_granted_ &&
+       !Manifest::IsUblockComponentHashed(hashed_id) &&
++      !Manifest::IsTwpComponentHashed(hashed_id) &&
+       location == ManifestLocation::kComponent)
+     return CreateAvailability(AvailabilityResult::kIsAvailable);

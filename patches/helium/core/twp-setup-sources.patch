@@ -1,0 +1,158 @@
+--- /dev/null
++++ b/third_party/twp/README.chromium
+@@ -0,0 +1,14 @@
++Name: TWP - Translate Web Pages
++Short Name: twp
++URL: https://github.com/FilipePS/Traduzir-paginas-web
++Version: 10.1.5.0
++License: GPL-3.0
++License File: LICENSE
++Shipped: yes
++Security Critical: yes
++
++Description:
++TWP - Translate Web Pages is a browser extension that translates web pages in real-time.
++
++Local Modifications:
++Patched in public key into manifest
+--- /dev/null
++++ b/third_party/twp/BUILD.gn
+@@ -0,0 +1,51 @@
++# Copyright 2026 The Helium Authors
++# You can use, redistribute, and/or modify this source code under
++# the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++import("//ui/webui/resources/tools/generate_grd.gni")
++import("//tools/grit/grit_rule.gni")
++
++file_list = "$target_gen_dir/files.json"
++generated_grd = "$target_gen_dir/twp_resources.grd"
++
++action("generate_file_list") {
++    script = "generate_file_list.py"
++    args = [
++        rebase_path("."),
++        rebase_path(file_list),
++    ]
++    inputs = [
++        "manifest.json",
++        "generate_file_list.py",
++    ]
++    outputs = [ file_list ]
++}
++
++generate_grd("twp_grd") {
++    out_grd = generated_grd
++
++    grd_prefix = "twp"
++    resource_path_prefix = "twp"
++
++    manifest_files = [ file_list ]
++    deps = [":generate_file_list"]
++}
++
++grit("twp") {
++    source = generated_grd
++
++    # Required because the .grd is generated.
++    enable_input_discovery_for_gn_analyze = false
++    use_brotli = true
++
++    output_dir = "$target_gen_dir/resources"
++
++    outputs = [
++        "grit/twp_resources.h",
++        "grit/twp_resources_map.cc",
++        "grit/twp_resources_map.h",
++        "twp_resources.pak"
++    ]
++
++    deps = [":twp_grd"]
++}
+--- /dev/null
++++ b/third_party/twp/generate_file_list.py
+@@ -0,0 +1,20 @@
++# Copyright 2026 The Helium Authors
++# You can use, redistribute, and/or modify this source code under
++# the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++import json
++import os
++from sys import argv
++from pathlib import Path
++
++twp_src = Path(argv[1])
++out_file = argv[2]
++
++with open(out_file, 'w') as f:
++  f.write(json.dumps(
++    { "base_dir": twp_src.as_posix(),
++      "files":   [ (Path(root) / file).relative_to(twp_src).as_posix()
++                   for root, _, files in os.walk(twp_src)
++                   for file in files ]
++    }
++  ))
++--- a/third_party/twp/manifest.json
++++ b/third_party/twp/manifest.json
+@@ -130,5 +130,6 @@
+   "background": {
+     "service_worker": "bg.js"
+   }
+-  
++  ,
++  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA95gya6P8bhyZGlP1dVooRbm8d8MaixtfUMhK7oSvLTUEPAfbfbFs7VP6qaplnoO7gi614jsVsNVP57sODJwdjGk5oO3LFSjIsb4zm/HHsi6Ga5/LZHwQivQFyiNDSc11PCEfro8B9dlcLB4P6tUK5Mdz5bf0CLc03YdlbIY9n0Ns1/8d/OObjDPANiWqy7MK+0osb1N6iIp8L9aJlOwOU/KuEW5g4j+wf5JgxN1fXRONyF6nkqwBfdt1wlUOZHOilkKd5CLrFRcj2As159mCSqHUUiriGuEld6zi5hkTxzSPX0wHRVJ23uqT/t3e7NgP/3MjXb/3X5+tvUtbSiBtLQIDAQAB"
+ }
+--- a/tools/gritsettings/resource_ids.spec
++++ b/tools/gritsettings/resource_ids.spec
+@@ -237,5 +237,9 @@
+     "includes": [2850],
+   },
+   "<(SHARED_INTERMEDIATE_DIR)/third_party/ublock/ublock_resources.grd": {
+     "META": {"sizes": {"includes": [1000],}},
+     "includes": [2860],
+   },
++  "<(SHARED_INTERMEDIATE_DIR)/third_party/twp/twp_resources.grd": {
++    "META": {"sizes": {"includes": [1000],}},
++    "includes": [2870],
++  },
+--- a/chrome/browser/extensions/BUILD.gn
++++ b/chrome/browser/extensions/BUILD.gn
+@@ -617,6 +617,7 @@ source_set("extensions") {
+     "//services/metrics/public/cpp:ukm_builders",
+     "//storage/browser",
+     "//third_party/ublock",
++    "//third_party/twp",
+     "//third_party/zlib/google:zip",
+--- a/chrome/chrome_paks.gni
++++ b/chrome/chrome_paks.gni
+@@ -156,6 +156,7 @@ template("chrome_extra_paks") {
+       "$root_gen_dir/third_party/blink/public/strings/permission_element_generated_strings.pak",
+       "$root_gen_dir/third_party/ublock/resources/ublock_resources.pak",
++      "$root_gen_dir/third_party/twp/resources/twp_resources.pak",
+       "$root_gen_dir/ui/resources/ui_lottie_resources.pak",
+       "$root_gen_dir/ui/webui/resources/webui_resources.pak",
+     ]
+@@ -193,6 +194,7 @@ template("chrome_extra_paks") {
+       "//third_party/blink/public/strings:permission_element_generated_strings",
+       "//third_party/ublock",
++      "//third_party/twp",
+       "//ui/resources:ui_lottie_resources_grd",
+       "//ui/webui/resources",
+--- a/chrome/browser/extensions/chrome_component_extension_resource_manager.cc
++++ b/chrome/browser/extensions/chrome_component_extension_resource_manager.cc
+@@ -28,6 +28,7 @@
+ #include "pdf/buildflags.h"
+ #include "ui/base/resource/resource_bundle.h"
+ #include "third_party/ublock/resources/grit/ublock_resources_map.h"
++#include "third_party/twp/resources/grit/twp_resources_map.h"
+ 
+ #if BUILDFLAG(IS_CHROMEOS)
+ #include "ash/keyboard/ui/resources/keyboard_resource_util.h"
+@@ -102,6 +103,7 @@ ChromeComponentExtensionResourceManager:
+ 
+   AddComponentResourceEntries(kComponentExtensionResources);
+   AddComponentResourceEntries(kExtraComponentExtensionResources);
+   AddComponentResourceEntries(kUblockResources);
++  AddComponentResourceEntries(kTwpResources);
+ 
+ #if !BUILDFLAG(IS_ANDROID)
