@@ -92,19 +92,18 @@
 +                   for file in files ]
 +    }
 +  ))
-+--- a/third_party/twp/manifest.json
+--- a/third_party/twp/manifest.json
 +++ b/third_party/twp/manifest.json
-@@ -130,5 +130,6 @@
+@@ -130,4 +130,5 @@
    "background": {
      "service_worker": "bg.js"
-   }
--  
-+  ,
+-  }
++  },
 +  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA95gya6P8bhyZGlP1dVooRbm8d8MaixtfUMhK7oSvLTUEPAfbfbFs7VP6qaplnoO7gi614jsVsNVP57sODJwdjGk5oO3LFSjIsb4zm/HHsi6Ga5/LZHwQivQFyiNDSc11PCEfro8B9dlcLB4P6tUK5Mdz5bf0CLc03YdlbIY9n0Ns1/8d/OObjDPANiWqy7MK+0osb1N6iIp8L9aJlOwOU/KuEW5g4j+wf5JgxN1fXRONyF6nkqwBfdt1wlUOZHOilkKd5CLrFRcj2As159mCSqHUUiriGuEld6zi5hkTxzSPX0wHRVJ23uqT/t3e7NgP/3MjXb/3X5+tvUtbSiBtLQIDAQAB"
  }
 --- a/tools/gritsettings/resource_ids.spec
 +++ b/tools/gritsettings/resource_ids.spec
-@@ -237,5 +237,9 @@
+@@ -237,6 +237,10 @@
      "includes": [2850],
    },
    "<(SHARED_INTERMEDIATE_DIR)/third_party/ublock/ublock_resources.grd": {
@@ -117,7 +116,7 @@
 +  },
 --- a/chrome/browser/extensions/BUILD.gn
 +++ b/chrome/browser/extensions/BUILD.gn
-@@ -617,6 +617,7 @@ source_set("extensions") {
+@@ -617,4 +617,5 @@ source_set("extensions") {
      "//services/metrics/public/cpp:ukm_builders",
      "//storage/browser",
      "//third_party/ublock",
@@ -125,14 +124,13 @@
      "//third_party/zlib/google:zip",
 --- a/chrome/chrome_paks.gni
 +++ b/chrome/chrome_paks.gni
-@@ -156,6 +156,7 @@ template("chrome_extra_paks") {
+@@ -156,4 +156,5 @@ template("chrome_extra_paks") {
        "$root_gen_dir/third_party/blink/public/strings/permission_element_generated_strings.pak",
        "$root_gen_dir/third_party/ublock/resources/ublock_resources.pak",
 +      "$root_gen_dir/third_party/twp/resources/twp_resources.pak",
        "$root_gen_dir/ui/resources/ui_lottie_resources.pak",
        "$root_gen_dir/ui/webui/resources/webui_resources.pak",
-     ]
-@@ -193,6 +194,7 @@ template("chrome_extra_paks") {
+@@ -193,4 +193,5 @@ template("chrome_extra_paks") {
        "//third_party/blink/public/strings:permission_element_generated_strings",
        "//third_party/ublock",
 +      "//third_party/twp",
@@ -140,15 +138,14 @@
        "//ui/webui/resources",
 --- a/chrome/browser/extensions/chrome_component_extension_resource_manager.cc
 +++ b/chrome/browser/extensions/chrome_component_extension_resource_manager.cc
-@@ -28,6 +28,7 @@
+@@ -28,5 +28,6 @@
  #include "pdf/buildflags.h"
  #include "ui/base/resource/resource_bundle.h"
  #include "third_party/ublock/resources/grit/ublock_resources_map.h"
 +#include "third_party/twp/resources/grit/twp_resources_map.h"
  
  #if BUILDFLAG(IS_CHROMEOS)
- #include "ash/keyboard/ui/resources/keyboard_resource_util.h"
-@@ -102,6 +103,7 @@ ChromeComponentExtensionResourceManager:
+@@ -102,5 +102,6 @@ ChromeComponentExtensionResourceManager::
  
    AddComponentResourceEntries(kComponentExtensionResources);
    AddComponentResourceEntries(kExtraComponentExtensionResources);
