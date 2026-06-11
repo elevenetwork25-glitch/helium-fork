@@ -1,6 +1,6 @@
 --- a/components/helium_services/extension_ids.h
 +++ b/components/helium_services/extension_ids.h
-@@ -20,6 +20,12 @@
+@@ -20,6 +20,13 @@
      // SHA1(kUBlockOriginComponentId)
      "70C2895ED505C532A80761F0928B821B103D0786";
  
@@ -26,7 +26,7 @@
    void AddChromeApp();
 --- a/chrome/browser/extensions/component_loader.cc
 +++ b/chrome/browser/extensions/component_loader.cc
-@@ -43,6 +43,7 @@
+@@ -43,5 +43,6 @@
  #include "ui/base/resource/resource_bundle.h"
  #include "third_party/ublock/resources/grit/ublock_resources.h"
 +#include "third_party/twp/resources/grit/twp_resources.h"

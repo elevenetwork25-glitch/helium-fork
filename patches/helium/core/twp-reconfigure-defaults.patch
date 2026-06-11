@@ -1,6 +1,6 @@
 --- a/extensions/common/manifest.h
 +++ b/extensions/common/manifest.h
-@@ -109,10 +109,18 @@
+@@ -109,11 +109,19 @@
    }
  
    static inline bool IsUBlockComponent(std::string_view extension_id) {
@@ -30,7 +30,7 @@
 +      && !Manifest::IsTwpComponent(extension->id())) {
 --- a/chrome/browser/ui/views/apps/app_info_dialog/app_info_summary_panel.cc
 +++ b/chrome/browser/ui/views/apps/app_info_dialog/app_info_summary_panel.cc
-@@ -170,3 +170,4 @@
+@@ -170,2 +170,3 @@
    if (Manifest::IsComponentLocation(app_->location())
 -      && !Manifest::IsUBlockComponent(app_->id())) {
 +      && !Manifest::IsUBlockComponent(app_->id())
@@ -64,7 +64,7 @@
 +          Manifest::IsUBlockComponent(extension_id_) ||
 +          Manifest::IsTwpComponent(extension_id_)) &&
        IsPolicyBlockedHostUnsafe(document_url)) {
-@@ -633,3 +636,4 @@
+@@ -633,4 +636,5 @@
      if (base::FeatureList::IsEnabled(
              extensions_features::kExtensionsMenuAccessControl) &&
 -      context_id_ && (location_ != mojom::ManifestLocation::kComponent ||
@@ -74,14 +74,14 @@
 +          Manifest::IsTwpComponent(extension_id_)) &&
 --- a/chrome/browser/extensions/extension_util.cc
 +++ b/chrome/browser/extensions/extension_util.cc
-@@ -182,3 +182,4 @@
+@@ -182,2 +182,3 @@
      if (extension->location() == mojom::ManifestLocation::kComponent
 -        && !Manifest::IsUBlockComponent(extension->id())) {
 +        && !Manifest::IsUBlockComponent(extension->id())
 +        && !Manifest::IsTwpComponent(extension->id())) {
 --- a/chrome/browser/extensions/standard_management_policy_provider.cc
 +++ b/chrome/browser/extensions/standard_management_policy_provider.cc
-@@ -128,6 +128,8 @@
+@@ -128,7 +128,9 @@
    bool is_u0 = Manifest::IsUBlockComponent(extension->id());
 -
 -  if (source_extension && Manifest::IsUBlockComponent(source_extension->id())) {
@@ -96,7 +96,7 @@
    }
 --- a/extensions/browser/extension_util.cc
 +++ b/extensions/browser/extension_util.cc
-@@ -98,3 +98,4 @@
+@@ -98,4 +98,5 @@
      if (Manifest::IsComponentLocation(extension->location())
 -        && !Manifest::IsUBlockComponent(extension->id())) {
 +        && !Manifest::IsUBlockComponent(extension->id())
