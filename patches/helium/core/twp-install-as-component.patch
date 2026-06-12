@@ -65,27 +65,14 @@
  #endif  // BUILDFLAG(IS_CHROMEOS)
 --- a/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
 +++ b/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
-@@ -17,6 +17,7 @@
- #include "chrome/grit/browser_resources.h"
- #include "components/helium_services/extension_ids.h"
- #include "chrome/grit/component_extension_resources.h"
-+#include "third_party/twp/resources/grit/twp_resources.h"
+@@ -21,1 +21,2 @@
  #include "third_party/ublock/resources/grit/ublock_resources.h"
- #include "extensions/buildflags/buildflags.h"
- #include "extensions/common/constants.h"
-@@ -39,6 +40,7 @@
-       extension_misc::kInAppPaymentsSupportAppId,
-       extension_misc::kPdfExtensionId,
++#include "third_party/twp/resources/grit/twp_resources.h"
+@@ -38,2 +39,3 @@
        helium::kUBlockOriginComponentId,
 +      helium::kTwpComponentId,
  #if BUILDFLAG(IS_CHROMEOS)
-       extension_misc::kAssessmentAssistantExtensionId,
-       extension_misc::kAccessibilityCommonExtensionId,
-@@ -99,6 +101,7 @@
-     case IDR_READING_MODE_GDOCS_HELPER_MANIFEST:
-     case IDR_WEBSTORE_MANIFEST:
+@@ -99,2 +101,3 @@
      case IDR_UBLOCK_MANIFEST_JSON:
 +    case IDR_TWP_MANIFEST_JSON:
- 
  #if BUILDFLAG(IS_CHROMEOS)
-     // Separate ChromeOS list, as it is quite large.
